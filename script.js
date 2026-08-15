@@ -39,11 +39,11 @@
      in your own browser's storage.
   ============================================================ */
   const defaultProfile = {
-    name: "Your Name",
-    title: "Role / Discipline",
-    bio: "A short, first-person line about what you build and what you're looking for.",
-    email: "you@example.com",
-    location: "City, Country",
+    name: "Debabrata Nath",
+    title: "Student- Aspiring AI Engineer",
+    bio: "I'm a Computer Science student focused on full-stack development and AI engineering. I recently built a production-grade clinic management system with role-based access control using React and FastAPI, and am currently exploring retrieval-augmented generation (RAG) systems. I'm interested in the intersection of practical software engineering and applied LLM development.",
+    email: "debabrata6570@gmail.com",
+    location: "Bhubaneswar, Odisha",
     resume: null,       // data URL of an uploaded PDF
     resumeName: ""       // original filename, shown while editing
   };
