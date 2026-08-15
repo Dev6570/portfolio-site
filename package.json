@@ -1,0 +1,12 @@
+{
+  "name": "portfolio-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static portfolio site (index.html / styles.css / script.js) with a jsdom-based functional test harness.",
+  "scripts": {
+    "test": "node tests/portfolio.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}
