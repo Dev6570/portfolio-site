@@ -43,48 +43,21 @@
     <section id="about" class="hero">
       <div class="eyebrow">Record of Work</div>
       <h1 class="name" id="heroName">Your Name</h1>
-      <div class="title-line" id="heroTitle">Role / Discipline — click "Edit profile" below to set this</div>
-      <p class="bio" id="heroBio">A short, first-person line about what you build and what you're looking for. Edit this directly in index.html, or use the profile editor.</p>
+      <div class="title-line" id="heroTitle">Role / Discipline</div>
+      <p class="bio" id="heroBio">A short, first-person line about what you build and what you're looking for.</p>
       <div class="hero-meta" id="heroMeta"></div>
       <a class="resume-btn" id="resumeBtn" href="#" style="display:none;" target="_blank" rel="noopener">Download résumé ↓</a>
-      <div class="control-row" style="margin-top:28px;">
-        <button class="btn ghost" id="editProfileBtn">Edit profile</button>
-      </div>
-      <div class="admin-panel" id="profilePanel">
-        <div class="field-grid">
-          <div><label for="pName">Name</label><input type="text" id="pName" placeholder="Jane Doe"></div>
-          <div><label for="pTitle">Role / title</label><input type="text" id="pTitle" placeholder="Backend Engineer"></div>
-          <div class="full"><label for="pBio">Short bio</label><textarea id="pBio" rows="2" placeholder="One or two sentences about your work."></textarea></div>
-          <div><label for="pEmail">Email</label><input type="text" id="pEmail" placeholder="jane@example.com"></div>
-          <div><label for="pLocation">Location</label><input type="text" id="pLocation" placeholder="City, Country"></div>
-          <div class="full">
-            <label for="pResumeFile">Résumé (PDF, upload from device)</label>
-            <div class="file-drop" id="resumeDropLabel">Click to choose a PDF from this device (under 8&nbsp;MB)</div>
-            <input type="file" id="pResumeFile" accept="application/pdf" style="display:none;">
-            <div class="help-note" id="resumeFileName" style="margin-top:8px;"></div>
-          </div>
-        </div>
-        <button class="btn" id="saveProfileBtn">Save profile</button>
-        <p class="help-note">Saved to this browser so you can preview changes. Use "Export site data" in the certificates panel to bake everything in permanently before you deploy.</p>
-      </div>
     </section>
 
     <!-- ===== Projects ===== -->
     <section id="projects" class="record-section">
       <div class="section-head">
         <h2 class="section-title">Projects</h2>
-        <span class="section-code">PRJ — synced from GitHub</span>
+        <span class="section-code">PRJ</span>
       </div>
-      <p class="section-note">Pulled live from a public GitHub profile. Enter a username once and it's remembered for future visits.</p>
+      <p class="section-note">A record of things built.</p>
 
-      <div class="control-row">
-        <input type="text" id="ghUsername" placeholder="GitHub username" style="max-width:220px;">
-        <button class="btn" id="syncBtn">Sync from GitHub</button>
-        <button class="btn ghost" id="sortBtn" data-mode="updated">Sort: recently updated</button>
-      </div>
-      <div class="status-line" id="ghStatus"></div>
-
-      <div id="projectsList" style="margin-top:20px;"></div>
+      <div id="projectsList"></div>
     </section>
 
     <!-- ===== Certificates ===== -->
@@ -93,39 +66,9 @@
         <h2 class="section-title">Certificates</h2>
         <span class="section-code">CRT — verified credentials</span>
       </div>
-      <p class="section-note">Add certificates from your device. Each gets a reference number and displays like an entry in a credentials ledger.</p>
+      <p class="section-note">Each entry gets a reference number and displays like an entry in a credentials ledger.</p>
 
-      <div class="admin-toggle">
-        <button class="btn ghost" id="toggleCertPanel">+ Add certificate</button>
-      </div>
-
-      <div class="admin-panel" id="certPanel">
-        <div class="field-grid">
-          <div><label for="cTitle">Certificate title</label><input type="text" id="cTitle" placeholder="AWS Certified Solutions Architect"></div>
-          <div><label for="cIssuer">Issuing organization</label><input type="text" id="cIssuer" placeholder="Amazon Web Services"></div>
-          <div><label for="cDate">Date issued</label><input type="date" id="cDate"></div>
-          <div><label for="cUrl">Credential URL (optional)</label><input type="url" id="cUrl" placeholder="https://credential.example.com/..."></div>
-          <div class="full">
-            <label for="cFile">Certificate image</label>
-            <div class="file-drop" id="fileDropLabel">Click to choose an image from this device (PNG/JPG, under 4&nbsp;MB)</div>
-            <input type="file" id="cFile" accept="image/*" style="display:none;">
-            <img id="cPreview" class="preview-thumb" style="display:none;">
-          </div>
-        </div>
-        <div class="control-row">
-          <button class="btn" id="saveCertBtn">Save certificate</button>
-          <button class="btn subtle" id="cancelCertBtn">Cancel</button>
-        </div>
-        <div class="status-line" id="certFormStatus"></div>
-      </div>
-
-      <div id="certificatesList" style="margin-top:10px;"></div>
-
-      <div class="control-row" style="margin-top:22px;">
-        <button class="btn subtle" id="exportBtn">Export site data (JSON)</button>
-      </div>
-      <textarea class="export-box" id="exportBox" style="display:none;" readonly></textarea>
-      <p class="help-note" id="exportHelp" style="display:none;">Copy this into <code>defaultCertificates</code> and <code>defaultProfile</code> near the top of the script in index.html, then redeploy — that's what makes your entries visible to every visitor, not just this browser.</p>
+      <div id="certificatesList"></div>
     </section>
 
     <!-- ===== Contact ===== -->
@@ -141,7 +84,7 @@
   </div>
 
   <footer class="foot">
-    <div class="wrap">Built as a static, self-contained page — projects sync live from GitHub; certificates are stored locally until exported into the file.</div>
+    <div class="wrap">Built as a static, self-contained page.</div>
   </footer>
 </main>
 

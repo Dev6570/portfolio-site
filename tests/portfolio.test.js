@@ -4,7 +4,7 @@ const { JSDOM } = require("jsdom");
 
 const ROOT = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-const scriptSrc = fs.readFileSync(path.join(ROOT, "script.js"), "utf8");
+const rawScript = fs.readFileSync(path.join(ROOT, "script.js"), "utf8");
 
 let failures = 0;
 function assert(cond, msg){
@@ -12,87 +12,81 @@ function assert(cond, msg){
   else { console.error("FAIL - " + msg); failures++; }
 }
 
-function setVal(document, id, val){
-  const el = document.getElementById(id);
-  el.value = val;
-  el.dispatchEvent(new document.defaultView.Event("input", { bubbles: true }));
+function loadDom(scriptSrc){
+  const dom = new JSDOM(html, { url: "https://example.com/", runScripts: "outside-only", pretendToBeVisual: true });
+  const { window } = dom;
+  window.IntersectionObserver = class { observe(){} unobserve(){} disconnect(){} };
+  dom.window.eval(scriptSrc);
+  return dom;
 }
 
 async function run(){
-  const dom = new JSDOM(html, {
-    url: "https://example.com/",
-    runScripts: "outside-only",
-    pretendToBeVisual: true
-  });
-  const { window } = dom;
-  const { document } = window;
-
-  // stub fetch so GitHub sync doesn't fire a real network call during init
-  window.fetch = async () => ({ ok: false, status: 500, json: async () => ([]) });
-
-  // jsdom doesn't implement IntersectionObserver - stub it
-  window.IntersectionObserver = class {
-    observe(){} unobserve(){} disconnect(){}
-  };
-
-  dom.window.eval(scriptSrc);
-
-  // let the async init() IIFE settle
+  // ---- Part 1: default shipped file (empty lists) ----
+  const dom1 = loadDom(rawScript);
   await new Promise(r => setTimeout(r, 50));
-  const tick = () => new Promise(r => setTimeout(r, 30));
+  const doc1 = dom1.window.document;
 
-  // ---- Test 1: cert ID collision after delete ----
-  async function addCert(title, issuer, url){
-    document.getElementById("toggleCertPanel").click();
-    setVal(document, "cTitle", title);
-    setVal(document, "cIssuer", issuer);
-    setVal(document, "cUrl", url || "");
-    document.getElementById("saveCertBtn").click();
-    await tick();
-  }
+  assert(!doc1.getElementById("editProfileBtn"), "no 'Edit profile' button exists anywhere on the page");
+  assert(!doc1.getElementById("saveProfileBtn"), "no 'Save profile' button exists");
+  assert(!doc1.getElementById("toggleCertPanel"), "no '+ Add certificate' button exists");
+  assert(!doc1.getElementById("saveCertBtn"), "no 'Save certificate' button exists");
+  assert(!doc1.getElementById("ghUsername"), "no GitHub username input exists");
+  assert(!doc1.getElementById("syncBtn"), "no 'Sync from GitHub' button exists");
+  assert(!doc1.getElementById("exportBtn"), "no 'Export site data' button exists");
+  assert(!doc1.querySelector(".admin-panel"), "no .admin-panel element exists anywhere in the DOM");
+  assert(!doc1.querySelector('[data-action="delete"]'), "no delete/remove buttons exist for certificates");
+  assert(!doc1.querySelector(".pin-btn"), "no pin/feature buttons exist for projects");
 
-  await addCert("Cert A", "Issuer A");
-  await addCert("Cert B", "Issuer B");
-  await addCert("Cert C", "Issuer C");
+  assert(doc1.getElementById("projectsList").querySelector(".empty-state"), "empty projects list shows the empty-state message");
+  assert(doc1.getElementById("certificatesList").querySelector(".empty-state"), "empty certificates list shows the empty-state message");
 
-  let ids = [...document.querySelectorAll("#certificatesList .record-id")].map(e => e.textContent);
-  assert(ids.length === 3 && new Set(ids).size === 3, "three certs created with unique ids: " + ids.join(", "));
+  const themeBtn = doc1.getElementById("themeToggleRail");
+  themeBtn.click();
+  await new Promise(r => setTimeout(r, 20));
+  assert(dom1.window.document.body.classList.contains("theme-dark"), "theme toggle still works (dark mode applied)");
 
-  const middleId = ids[1];
-  const removeBtn = [...document.querySelectorAll('[data-action="delete"]')].find(b => b.dataset.id === middleId);
-  assert(!!removeBtn, "found remove button for middle cert " + middleId);
-  removeBtn.click();
-  await tick();
+  // ---- Part 2: inject sample project/certificate data, including malicious values ----
+  const sampleScript = rawScript
+    .replace(
+      /const defaultProjects = \[[\s\S]*?\];/,
+      `const defaultProjects = [
+        { title: 'Cool Project" onmouseover="alert(1)', description: "Does cool things.", url: "https://github.com/example/cool", tags: ["Python","API"], status: "active" },
+        { title: "Bad Link Project", description: "desc", url: 'javascript:alert(1)//"x', tags: [], status: "archived" }
+      ];`
+    )
+    .replace(
+      /const defaultCertificates = \[[\s\S]*?\];/,
+      `const defaultCertificates = [
+        { title: 'Cert" onmouseover="alert(2)', issuer: "Issuer A", date: "2024-01-15", credentialUrl: "https://example.com/cred/1", image: null },
+        { title: "Bad Cred Cert", issuer: "Issuer B", date: "2024-02-01", credentialUrl: "javascript:alert(2)", image: null }
+      ];`
+    );
 
-  ids = [...document.querySelectorAll("#certificatesList .record-id")].map(e => e.textContent);
-  assert(ids.length === 2, "two certs remain after delete: " + ids.join(", "));
+  const dom2 = loadDom(sampleScript);
+  await new Promise(r => setTimeout(r, 50));
+  const doc2 = dom2.window.document;
 
-  await addCert("Cert D", "Issuer D");
-  ids = [...document.querySelectorAll("#certificatesList .record-id")].map(e => e.textContent);
-  const uniqueAfter = new Set(ids).size === ids.length;
-  assert(uniqueAfter, "no id collision after delete+add: " + ids.join(", "));
-  assert(!ids.includes(middleId) || ids.filter(i => i === middleId).length === 1, "deleted id not silently reused as a duplicate");
+  const projectRecords = doc2.querySelectorAll("#projectsList .record");
+  assert(projectRecords.length === 2, "both sample projects rendered: " + projectRecords.length);
 
-  // ---- Test 2: malicious credential URL is rejected/escaped ----
-  const countBefore = document.querySelectorAll("#certificatesList .record").length;
-  await addCert("Cert E", "Issuer E", 'javascript:alert(1)//" onmouseover="alert(2)');
-  const statusText = document.getElementById("certFormStatus").textContent;
-  assert(/valid http/i.test(statusText), "javascript: URL rejected at save time with clear error: \"" + statusText + "\"");
-  const countAfterBad = document.querySelectorAll("#certificatesList .record").length;
-  assert(countAfterBad === countBefore, "malicious cert was NOT added to the list");
+  const projectLinks = [...doc2.querySelectorAll("#projectsList a")];
+  assert(projectLinks.some(a => a.href.includes("github.com/example/cool")), "valid https project URL rendered as a real link");
+  assert(!projectLinks.some(a => a.href.startsWith("javascript:")), "javascript: project URL was NOT rendered as a clickable link");
 
-  await addCert('Cert F" onmouseover="alert(3)', "Issuer F", "https://example.com/cred/123");
-  const countAfter = document.querySelectorAll("#certificatesList .record").length;
-  assert(countAfter === countBefore + 1, "legit https-credential cert was added (bad one was rejected, this one wasn't)");
+  const projectTitles = [...doc2.querySelectorAll("#projectsList h3")].map(h => h.textContent);
+  assert(projectTitles.some(t => t.includes('Cool Project" onmouseover="alert(1)')), "malicious project title rendered as literal text: " + JSON.stringify(projectTitles));
+  assert(!doc2.querySelector("#projectsList [onmouseover]"), "no onmouseover attribute injected into the DOM from project data");
 
-  const lastLink = [...document.querySelectorAll("#certificatesList a")].find(a => a.href.includes("example.com/cred/123"));
-  assert(!!lastLink, "https credential link rendered correctly: " + (lastLink && lastLink.href));
+  const certRecords = doc2.querySelectorAll("#certificatesList .record");
+  assert(certRecords.length === 2, "both sample certificates rendered: " + certRecords.length);
 
-  const injected = document.querySelector('#certificatesList [onmouseover]');
-  assert(!injected, "no onmouseover attribute injected into the DOM from malicious title/url input");
+  const certLinks = [...doc2.querySelectorAll("#certificatesList a")];
+  assert(certLinks.some(a => a.href.includes("example.com/cred/1")), "valid https credential URL rendered as a real link");
+  assert(!certLinks.some(a => a.href.startsWith("javascript:")), "javascript: credential URL was NOT rendered as a clickable link");
+  assert(!doc2.querySelector("#certificatesList [onmouseover]"), "no onmouseover attribute injected into the DOM from certificate data");
 
-  const titleEls = [...document.querySelectorAll("#certificatesList h3")].map(h => h.textContent);
-  assert(titleEls.some(t => t.includes('Cert F" onmouseover="alert(3)')), "malicious title rendered as literal text, not parsed as an attribute");
+  const certIds = [...doc2.querySelectorAll("#certificatesList .record-id")].map(e => e.textContent);
+  assert(certIds[0] === "CRT-001" && certIds[1] === "CRT-002", "certificate reference numbers assigned sequentially: " + certIds.join(", "));
 
   console.log("\n" + (failures === 0 ? "ALL TESTS PASSED" : failures + " TEST(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);
