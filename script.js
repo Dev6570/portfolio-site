@@ -37,22 +37,23 @@
      editing UI: every visitor sees exactly what's defined here.
   ============================================================ */
   const defaultProfile = {
-    name: "Your Name",
-    title: "Role / Discipline",
-    bio: "A short, first-person line about what you build and what you're looking for.",
-    email: "you@example.com",
-    location: "City, Country",
+    name: "Debabrata Nath",
+    title: "Student - Aspiring AI Engineer",
+    bio: "I'm a Computer Science student focused on full-stack development and AI engineering. I recently built a production-grade clinic management system with role-based access control using React and FastAPI, and am currently exploring retrieval-augmented generation (RAG) systems. I'm interested in the intersection of practical software engineering and applied LLM development.",
+    email: "debabrata6570@gmail.com",
+    location: "Bhubaneswar, Odisha",
     resume: null   // e.g. "resume.pdf" - path to a PDF file you add to the repo, or null to hide the button
   };
 
   const defaultProjects = [
-    // { title:"Project Name", description:"What it does.", url:"https://github.com/you/project",
-    //   tags:["Python","API"], status:"active" }
+    { title: "Clinic Appointment System", description: "Production-grade clinic management system with role-based access control.", url: "https://github.com/Dev6570/clinic-appointment-system", tags: ["React", "FastAPI", "RBAC"], status: "active" },
+    { title: "Portfolio Site", description: "This site itself - a static, dependency-light portfolio with a jsdom-based functional test harness.", url: "https://github.com/Dev6570/portfolio-site", tags: ["HTML", "CSS", "JavaScript"], status: "active" }
   ];
 
   const defaultCertificates = [
-    // { title:"Example Certificate", issuer:"Issuing Body", date:"2024-01-15",
-    //   credentialUrl:"", image:null }
+    { title: "Cloud Computing Applications, Part 1: Cloud Systems and Infrastructure", issuer: "University of Illinois Urbana-Champaign", date: "2025-02-24", credentialUrl: "https://coursera.org/verify/TICJK1BMXQUR", image: "certs/cloud-computing-part1.jpg" },
+    { title: "Cloud Computing Applications, Part 2: Big Data and Applications in the Cloud", issuer: "University of Illinois Urbana-Champaign", date: "2025-02-23", credentialUrl: "https://coursera.org/verify/UK8JZRTSHN56", image: "certs/cloud-computing-part2.jpg" },
+    { title: "Introduction to Cloud Computing", issuer: "IBM", date: "2024-12-02", credentialUrl: "https://coursera.org/verify/AGECW1MXQ1KY", image: "certs/intro-cloud-computing.jpg" }
   ];
 
   /* ============================================================

@@ -37,13 +37,20 @@ async function run(){
   assert(!doc1.querySelector('[data-action="delete"]'), "no delete/remove buttons exist for certificates");
   assert(!doc1.querySelector(".pin-btn"), "no pin/feature buttons exist for projects");
 
-  assert(doc1.getElementById("projectsList").querySelector(".empty-state"), "empty projects list shows the empty-state message");
-  assert(doc1.getElementById("certificatesList").querySelector(".empty-state"), "empty certificates list shows the empty-state message");
-
   const themeBtn = doc1.getElementById("themeToggleRail");
   themeBtn.click();
   await new Promise(r => setTimeout(r, 20));
   assert(dom1.window.document.body.classList.contains("theme-dark"), "theme toggle still works (dark mode applied)");
+
+  // ---- Part 1b: empty-state rendering (isolated case, independent of shipped content) ----
+  const emptyScript = rawScript
+    .replace(/const defaultProjects = \[[\s\S]*?\];/, "const defaultProjects = [];")
+    .replace(/const defaultCertificates = \[[\s\S]*?\];/, "const defaultCertificates = [];");
+  const domEmpty = loadDom(emptyScript);
+  await new Promise(r => setTimeout(r, 50));
+  const docEmpty = domEmpty.window.document;
+  assert(docEmpty.getElementById("projectsList").querySelector(".empty-state"), "empty projects list shows the empty-state message");
+  assert(docEmpty.getElementById("certificatesList").querySelector(".empty-state"), "empty certificates list shows the empty-state message");
 
   // ---- Part 2: inject sample project/certificate data, including malicious values ----
   const sampleScript = rawScript
@@ -87,6 +94,21 @@ async function run(){
 
   const certIds = [...doc2.querySelectorAll("#certificatesList .record-id")].map(e => e.textContent);
   assert(certIds[0] === "CRT-001" && certIds[1] === "CRT-002", "certificate reference numbers assigned sequentially: " + certIds.join(", "));
+
+  // ---- Part 3: the actual shipped content (real profile/projects/certs) ----
+  assert(doc1.getElementById("heroName").textContent === "Debabrata Nath", "real profile name rendered");
+  assert(doc1.getElementById("heroTitle").textContent.includes("AI Engineer"), "real profile title rendered");
+  assert(doc1.querySelector("#contactLinks a[href='mailto:debabrata6570@gmail.com']"), "real email rendered as a mailto link");
+
+  const shippedProjects = doc1.querySelectorAll("#projectsList .record");
+  assert(shippedProjects.length === 2, "both real projects rendered: " + shippedProjects.length);
+  const clinicLink = [...doc1.querySelectorAll("#projectsList a")].find(a => a.href.includes("clinic-appointment-system"));
+  assert(!!clinicLink, "clinic-appointment-system project links to the real GitHub repo");
+
+  const shippedCerts = doc1.querySelectorAll("#certificatesList .record");
+  assert(shippedCerts.length === 3, "all three real certificates rendered: " + shippedCerts.length);
+  const certImgs = [...doc1.querySelectorAll("#certificatesList .cert-thumb")].map(img => img.getAttribute("src"));
+  assert(certImgs.includes("certs/cloud-computing-part1.jpg"), "certificate image paths point to certs/ folder: " + certImgs.join(", "));
 
   console.log("\n" + (failures === 0 ? "ALL TESTS PASSED" : failures + " TEST(S) FAILED"));
   process.exit(failures === 0 ? 0 : 1);
